@@ -1,1 +1,3 @@
 /.vagrant
+/microk8s_*.snap
+/microk8s_*.assert

@@ -7,11 +7,21 @@
   connection: local
   tasks:
   
-  - name: Install microk8s
+  # Default install way when you have a good network connection to download the snap directly
+#  - name: Install microk8s
+#    become: true
+#    community.general.snap:
+#      name: microk8s
+#      classic: true
+
+  # Installation with pre-fetched .snap-file
+  # See https://askubuntu.com/questions/1266894/how-can-i-install-a-snap-package-from-a-local-file
+  - name: Install microk8s from .snap-file
     become: true
     community.general.snap:
-      name: microk8s
+      name: /vagrant/microk8s_8148.snap
       classic: true
+      dangerous: true
 
   - name: Add 'k' alias for vagrant user
     ansible.builtin.lineinfile:
@@ -45,10 +55,13 @@
     when: group_add is changed
 
   - name: Enable microk8s DNS addon
+    become: true
     ansible.builtin.command: microk8s enable dns
 
   - name: Enable microk8s storage addon
+    become: true
     ansible.builtin.command: microk8s enable storage
 
   - name: Enable microk8s dashboard addon
+    become: true
     ansible.builtin.command: microk8s enable dashboard
