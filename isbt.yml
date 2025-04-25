@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isbt-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isbt-app
+  template:
+    metadata:
+      labels:
+        app: isbt-app
+    spec:
+      containers:
+        - name: isbt-app
+          image: bartoszchm/bch-isbt-app:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOSTNAME
+              value: "isbt-mysql"
+            - name: DB_USER
+              value: "isbt_service"
+            - name: DB_PASSWORD
+              value: "webco123"
+            - name: DB_NAME
+              value: "isbt_db"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: isbt-app
+  labels:
+    app: isbt-app
+  namespace: isbt
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+  selector:
+    app: isbt-app
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isbt-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isbt-mysql
+  template:
+    metadata:
+      labels:
+        app: isbt-mysql
+    spec:
+      containers:
+        - name: isbt-mysql
+          image: bartoszchm/bch-isbt-mysql:v1.2
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "password"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: isbt-mysql
+  labels:
+    app: isbt-mysql
+  namespace: isbt
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3306
+  selector:
+    app: isbt-mysql
+---

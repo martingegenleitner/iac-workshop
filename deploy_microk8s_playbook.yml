@@ -1,0 +1,54 @@
+# deploy_microk8s_playbook.yml
+---
+# This playbook implements the steps from https://ubuntu.com/tutorials/install-a-local-kubernetes-with-microk8s#1-overview
+
+- name: "Deploy microk8s on local host"
+  hosts: all
+  connection: local
+  tasks:
+  
+  - name: Install microk8s
+    become: true
+    community.general.snap:
+      name: microk8s
+      classic: true
+
+  - name: Add 'k' alias for vagrant user
+    ansible.builtin.lineinfile:
+      path: /home/vagrant/.bashrc
+      line: alias k='microk8s kubectl'
+      regexp: "^alias k='microk8s kubectl'$"
+      state: present
+      insertafter: EOF
+      create: true
+
+  - name: Add vagrant user to microk8s groups
+    become: true
+    ansible.builtin.user:
+      name: vagrant
+      groups: microk8s
+      append: yes
+    register: group_add
+  
+  - name: Ensure vagrant owns .kube folder
+    become: yes
+    ansible.builtin.file:
+      path: /home/vagrant/.kube
+      state: directory
+      recurse: yes
+      owner: vagrant
+      group: vagrant
+
+  - name: Reload microk8s group so the previous command takes effect
+    become: true
+    ansible.builtin.command: newgrp microk8s
+    when: group_add is changed
+
+  - name: Enable microk8s DNS addon
+    ansible.builtin.command: microk8s enable dns
+
+  - name: Enable microk8s storage addon
+    ansible.builtin.command: microk8s enable storage
+
+  - name: Enable microk8s dashboard addon
+    ansible.builtin.command: microk8s enable dashboard
