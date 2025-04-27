@@ -8,18 +8,24 @@
   tasks:
   
   # Default install way when you have a good network connection to download the snap directly
-#  - name: Install microk8s
+#  - name: Install microk8s, kubectl and helm
 #    become: true
 #    community.general.snap:
-#      name: microk8s
+#      name:
+#        - microk8s
+#        - kubectl
+#        - helm
 #      classic: true
 
   # Installation with pre-fetched .snap-file
   # See https://askubuntu.com/questions/1266894/how-can-i-install-a-snap-package-from-a-local-file
-  - name: Install microk8s from .snap-file
+  - name: Install microk8s, kubectl and helm from .snap-file
     become: true
     community.general.snap:
-      name: /vagrant/microk8s_8148.snap
+      name:
+        - /vagrant/microk8s_8148.snap
+        - /vagrant/kubectl_3581.snap
+        - /vagrant/helm_449.snap
       classic: true
       dangerous: true
 
@@ -37,15 +43,15 @@
     ansible.builtin.user:
       name: vagrant
       groups: microk8s
-      append: yes
+      append: true
     register: group_add
   
   - name: Ensure vagrant owns .kube folder
-    become: yes
+    become: true
     ansible.builtin.file:
       path: /home/vagrant/.kube
       state: directory
-      recurse: yes
+      recurse: true
       owner: vagrant
       group: vagrant
 
@@ -61,6 +67,10 @@
   - name: Enable microk8s storage addon
     become: true
     ansible.builtin.command: microk8s enable storage
+
+  - name: Enable microk8s metallb addon
+    become: true
+    ansible.builtin.command: microk8s enable metallb 192.168.56.10-192.168.56.10
 
   - name: Enable microk8s dashboard addon
     become: true
